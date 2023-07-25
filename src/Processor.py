@@ -59,8 +59,10 @@ def process():
 
     # login Factiva and only use one webdriver to increase speed
     # may result in a bug if login fails
-    driver = get_chrome_driver()
-    driver.get('http://guides.lib.uw.edu/factiva')
+    driver = webdriver.Chrome() #get_chrome_driver() as alternative
+    driver.get('https://www.pollux-fid.de/login')
+    sleep(5)
+    driver.get('https://www.pollux-fid.de/factiva')
     sleep(5)
 
     for _ in range(config.process_times):

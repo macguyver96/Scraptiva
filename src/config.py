@@ -5,20 +5,21 @@ search_criteria = {
     'time': {  # from mm/dd/yyyy to mm/dd/yyyy
         'frm': 1,
         'frd': 1,
-        'fry': 2013,
+        'fry': 2020,
         'tom': 12,
         'tod': 31,
-        'toy': 2017
+        'toy': 2022
     },
-    'sources': ['The New York Times', 'Financial Times', 'The economist', 'Forbes', 'Fortune', 'The Times',
-                'The Wall Street Journal']
+    'sources': ['Süddeutsche Zeitung'],
+    'subjects': ['Commentaries/Opinions'],
+    'language': ['German']
 }
 
-# let selenium driver wait for so long before reporting bug
-implicit_wait_time = 10
+# let selenium driver wait for so long before reporting bug (in what unit?)
+implicit_wait_time = 100
 
 # web driver location used by selenium
-chrome_webdriver_location = '/Users/luyuxuan/Desktop/scrape/chromedriver'
+chrome_webdriver_location = 'C:/Users/ferdi/OneDriveTUM/Privat/9_Code/Scraptiva'
 
 # location of firm_list csv file to be scraped
 # example of proper formatting:
@@ -27,7 +28,7 @@ gvkey,cik,conm,Role,Source,Date,Time,Title,Content
 1004,1750,AAR CORP,"CEO, Chief Executive Officer",,,,,
 1004,1750,AAR CORP,"CFO, Chief Financial Officer",,,,,
 """
-firm_list_location = "/Users/luyuxuan/Desktop/scrape/Scraptiva/short_firmlist.csv"
+firm_list_location = "C:/Users/ferdi/OneDriveTUM/Privat/9_Code/Scraptiva/short_firmlist.csv"
 
 # location of scraping output
 output_location = "/Users/luyuxuan/Desktop/scrape/Scraptiva/test_result.csv"
@@ -35,7 +36,7 @@ output_location = "/Users/luyuxuan/Desktop/scrape/Scraptiva/test_result.csv"
 # location of scrape_status.json. This should be an auto-generated file that keeps track of how much
 # work it has done, so that it can "pick up where it left". If this is a location of an existing file,
 # this file will be truncated.
-scrape_status_location = "/Users/luyuxuan/Desktop/scrape/Scraptiva/src/scrape_status.json"
+scrape_status_location = "C:/Users/ferdi/OneDriveTUM/Privat/9_Code/Scraptiva/scrape_status.json"
 
 # the number of entries in firm_list to process in each try
 entries_to_process = 2
