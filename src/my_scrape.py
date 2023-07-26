@@ -3,11 +3,9 @@ from src.ContentFinder import *
 from bs4 import BeautifulSoup
 from bs4 import element
 from selenium.webdriver.common.by import By
-
-
-
-
-
+import pandas as pd
+from src.utils import printProgressBar
+import datetime
 
 search_criteria = {
     'time': {  # from mm/dd/yyyy to mm/dd/yyyy
@@ -16,20 +14,18 @@ search_criteria = {
         'fry': 2020,
         'tom': 12,
         'tod': 31,
-        'toy': 2022
+        'toy': 2020
     },
     'sources': ['Süddeutsche Zeitung'],
     'subjects': ['Commentaries/Opinions', 'Columns', 'Editorials'],
-    'sub_exclude': ['Letters', 'Content', 'Interviews',  'Images', 'Transcripts', 'Surveys/Polls', 'Statistics', 'Advertorials/Sponsored Content'],
-    'language': ['German']
+    'sub_exclude': ['Advertorials/Sponsored Content', 'Analyses', 'Audio-visual Links', 'Calendar of Events',
+                    'Chronology', 'Country Profiles', 'Headline-Only Content', 'Headline Listings',
+                    'Images',  'Letters', 'News Agency Materials', 'People Profiles', 'Press Releases', 'Obituaries'],
+    'language': ['German'],
+    'region': ['Germany']
 }
 
 chrome_webdriver_location = r"C:\Users\ferdi\OneDriveTUM\Privat\9_Code\Scraptiva\chromedriver.exe"
-
-
-
-
-
 
 # WARNING: known source of bug. The article pages on Factiva has slightly different formats, which
 #          is why this method may results in exception.
@@ -70,7 +66,8 @@ def get_article_links(html):
         links.append(entry.find_all('td')[2].find('a')['href'].replace('..', 'https://global-1factiva-1com-1h89pp8pl02e3.proxy.fid-lizenzen.de/'))
     return links
 
-def get_article_pages(driver):
+
+def get_all_links(driver):
     print("Lets go")
     links = []
     n = 1
@@ -87,20 +84,38 @@ def get_article_pages(driver):
             n = 0
 
     links = [item for items in links for item in items]
-    max = driver.find_element(By.CLASS_NAME, "resultsBar").text[-3:]
+    max = driver.find_element(By.CLASS_NAME, "resultsBar").text[-5:]
     print("All links received. ", len(links), " / ", max)
 
-    pd.DataFrame(article_pages).to_csv('all_my_links1.csv', index=False, mode='x')
+    pd.DataFrame(links).to_csv('all_my_links2020.csv', index=False, mode='x')
     print("All links saved to csv.")
+    return links
+
+
+def get_article_pages(driver, loaded_links=None, page_file=None):
+    if loaded_links is not None:
+        links = loaded_links
+    else:
+        links = get_all_links(driver)
+
+    if page_file is not None:
+        text_file = page_file
+    else:
+        text_file = 'page_file.txt'
+        with open(text_file, "w", encoding="utf-8") as file:
+            now = datetime.datetime.now()
+            file.write("{}\n".format(now))
 
     result = []
-    printProgressBar(0, l, prefix='Progress:', suffix='Complete', length=50)
+    printProgressBar(0, len(links), prefix='Progress:', suffix='Complete', length=50)
     for i in range(0, len(links)):
         #print("\tProcessing article " + str(i + 1) + " of total " + str(len(links)))
         driver.get(links[i])
         sleep(5)
         result.append(driver.page_source)
-        printProgressBar(i + 1, l, prefix='Progress:', suffix='Complete', length=50)
+        with open(text_file, 'a', encoding="utf-8") as file:
+            file.write("{}\n".format(str(driver.page_source)))
+        printProgressBar(i + 1, len(links), prefix='Progress:', suffix='Complete', length=50)
         # Factiva blocks you out if you search for articles too quickly
         sleep(3)
     return result
@@ -110,29 +125,20 @@ def get_article_pages(driver):
 # program entry point
 if __name__ == "__main__":
 
+# Settings
+    links_file = 'src/all_my_links2020.csv'
+
+    articles_file = 'processed_articles2020.csv'
+
+# Login
     pollux_mail = "ferdi.baune@tum.de"
     pollux_pass = "Awaken-Syndrome6-Hyperlink"
 
     driver = webdriver.Chrome(chrome_webdriver_location)
-    driver.get('https://www.pollux-fid.de/login')
 
-    email = driver.find_element(By.ID, "emailId")
-    email.click()
+    go_to_factiva(driver, pollux_mail, pollux_pass)
 
-    email.clear()
-    email.send_keys(pollux_mail)
-
-    password = driver.find_element(By.ID, "current-password")
-    password.click()
-    password.send_keys(pollux_pass)
-
-    login = driver.find_element(By.ID, "submit")
-    login.click()
-
-    sleep(3)
-    driver.get('https://www.pollux-fid.de/factiva')
-    sleep(5)
-
+# Start Search
     search = driver.find_element(By.XPATH, '//*[@id="navmbm0"]/a')
     search.click()
     sleep(3)
@@ -140,12 +146,13 @@ if __name__ == "__main__":
     enter_search_criteria(driver)
 
     driver.find_element(By.ID, "btnSearchBottom").click()
-
     sleep(5)
 
-    # Get HTML of all articles.
-    article_pages = get_article_pages(driver)
-    pd.DataFrame(article_pages).to_csv('all_my_links1.csv', index=False, mode='x')
+# Get Links of all articles
+
+
+# Get HTML of all articles.
+    article_pages = get_article_pages(driver, pd.read_csv(links_file)['0'])
 
     print("-------- Articles Received --------")
 
@@ -160,7 +167,7 @@ if __name__ == "__main__":
 
     # Save the data to a csv file.
     data = pd.DataFrame(article_info)
-    data.to_csv('processed_articles2.csv', index=False, mode='x')
+    data.to_csv(articles_file, index=False, mode='x')
 
     print("-------- Data Saved --------")
 
@@ -173,3 +180,16 @@ if __name__ == "__main__":
 
 #pd.read_csv('processed_articles2.csv').info()
 
+with open('page_file.txt', encoding="utf8") as f:
+    page_files = f.readlines()
+
+# opening the file in read mode
+file = open("page_file.txt", "r", encoding="utf8")
+
+# reading the file
+data = file.read()
+
+# replacing end splitting the text
+# when newline ('\n') is seen.
+page_files = data.split("\n")
+file.close()
