@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 import pandas as pd
 from src.utils import printProgressBar
 import datetime
+import glob
 
 search_criteria = {
     'time': {  # from mm/dd/yyyy to mm/dd/yyyy
@@ -137,9 +138,9 @@ def get_article_pages(driver, loaded_links=None, page_file=None):
 if __name__ == "__main__":
 
 # Settings
-    links_file = 'sz_links_202210.csv'
+    links_file = 'sz_links_2021q1.csv'
 
-    articles_file = 'sz_articles_202210.csv'
+    articles_file = 'sz_articles_2021q1.csv'
 
 # Login
     pollux_mail = "ferdi.baune@tum.de"
@@ -183,25 +184,3 @@ if __name__ == "__main__":
 
     print("-------- Data Saved --------")
 
-
-
-
-#soup = BeautifulSoup(page, 'html.parser')
-#article_container = soup.find("div", {"class": "article deArticle"})
-#header = article_container.findAll("div", {"class": None})
-
-#pd.read_csv('processed_articles2.csv').info()
-
-with open('page_file.txt', encoding="utf8") as f:
-    page_files = f.readlines()
-
-# opening the file in read mode
-file = open("page_file.txt", "r", encoding="utf8")
-
-# reading the file
-data = file.read()
-
-# replacing end splitting the text
-# when newline ('\n') is seen.
-page_files = data.split("\n")
-file.close()
