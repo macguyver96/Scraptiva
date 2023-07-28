@@ -3,11 +3,11 @@
 
 search_criteria = {
     'time': {  # from mm/dd/yyyy to mm/dd/yyyy
-        'frm': 1,
+        'frm': 4,
         'frd': 1,
-        'fry': 2020,
-        'tom': 12,
-        'tod': 31,
+        'fry': 2022,
+        'tom': 4,
+        'tod': 21,
         'toy': 2022
     },
     'sources': ['Süddeutsche Zeitung'],

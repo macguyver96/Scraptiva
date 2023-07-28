@@ -9,12 +9,12 @@ import datetime
 
 search_criteria = {
     'time': {  # from mm/dd/yyyy to mm/dd/yyyy
-        'frm': 1,
+        'frm': 7,
         'frd': 1,
-        'fry': 2020,
+        'fry': 2022,
         'tom': 12,
         'tod': 31,
-        'toy': 2020
+        'toy': 2022
     },
     'sources': ['Süddeutsche Zeitung'],
     'subjects': ['Commentaries/Opinions', 'Columns', 'Editorials'],
@@ -35,15 +35,22 @@ chrome_webdriver_location = r"C:\Users\ferdi\OneDriveTUM\Privat\9_Code\Scraptiva
 def get_content(html):
     soup = BeautifulSoup(html, 'html.parser')
     article_container = soup.find("div", {"class": "article deArticle"})
+    if article_container is None:
+        return None
     header = article_container.findAll("div", {"class": None})
     # print(header)
 
     article_info = dict()
-    article_info["Title"] = header[0].find("span").string
-    article_info["Length"] = header[1].string
-    article_info["Date"] = header[2].string
-    article_info["Time"] = header[3].string if isinstance(header[3], element.Tag) else header[3]
-    article_info["Source"] = header[4].string
+    if header[0].find("span") == None:
+        x = 1
+    else:
+        x = 0
+
+    article_info["Title"] = header[x].find("span").string
+    article_info["Length"] = header[x+1].string
+    article_info["Date"] = header[x+2].string
+    article_info["Time"] = header[x+3].string if isinstance(header[x+3], element.Tag) else header[x+3]
+    article_info["Source"] = header[x+4].string
     content = list(paragraph.getText()
                    for paragraph in
                    article_container.findAll("p", {"class": "articleParagraph dearticleParagraph"}))
@@ -110,7 +117,11 @@ def get_article_pages(driver, loaded_links=None, page_file=None):
     printProgressBar(0, len(links), prefix='Progress:', suffix='Complete', length=50)
     for i in range(0, len(links)):
         #print("\tProcessing article " + str(i + 1) + " of total " + str(len(links)))
-        driver.get(links[i])
+        try:
+            driver.get(links[i])
+        except:
+            print(f'Failed at sampple number {i}.')
+            return result
         sleep(5)
         result.append(driver.page_source)
         with open(text_file, 'a', encoding="utf-8") as file:
@@ -126,9 +137,9 @@ def get_article_pages(driver, loaded_links=None, page_file=None):
 if __name__ == "__main__":
 
 # Settings
-    links_file = 'src/all_my_links2020.csv'
+    links_file = 'sz_links_202210.csv'
 
-    articles_file = 'processed_articles2020.csv'
+    articles_file = 'sz_articles_202210.csv'
 
 # Login
     pollux_mail = "ferdi.baune@tum.de"
@@ -152,21 +163,22 @@ if __name__ == "__main__":
 
 
 # Get HTML of all articles.
-    article_pages = get_article_pages(driver, pd.read_csv(links_file)['0'])
+    # article_pages = get_article_pages(driver, pd.read_csv(links_file)['0'])
+    article_pages = get_article_pages(driver)
 
     print("-------- Articles Received --------")
 
     # Extract information from HTML.
     article_info = []
-    n = 0
+    n = 1
     for page in article_pages:
         article_info.append(get_content(page))
         print("Article Number ", n, " processed.")
         n += 1
     print("-------- Articles Processed --------")
 
-    # Save the data to a csv file.
-    data = pd.DataFrame(article_info)
+# Save the data to a csv file.
+    data = pd.DataFrame(pd.DataFrame([i for i in article_info if i is not None]))
     data.to_csv(articles_file, index=False, mode='x')
 
     print("-------- Data Saved --------")
